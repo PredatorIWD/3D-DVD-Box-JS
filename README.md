@@ -3,4 +3,4 @@ A 3D DVD box inside the browser that is able to load a single scanned image of t
 
 You can try it out online right in the browser: **https://predatoriwd.github.io/3D-DVD-Box-JS/**
 
-![](assets/showcase.gif)
+![](showcase.gif)
