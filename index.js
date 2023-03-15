@@ -11,55 +11,65 @@ const renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Load the texture which will be stretched across the left, front, and back sides of the 3D DVD box
-const textureLoader = new THREE.TextureLoader();
-const boxArtTextureFront = textureLoader.load('assets/image.jpg');
-const boxArtTextureLeft = textureLoader.load('assets/image.jpg');
-const boxArtTextureBack = textureLoader.load('assets/image.jpg');
+// Create a canvas element and draw the image onto it
+const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d');
+const image = new Image();
+image.src = 'assets/image.jpg';
+image.onload = function () {
+  canvas.width = image.width;
+  canvas.height = image.height;
+  context.drawImage(image, 0, 0);
 
-boxArtTextureFront.wrapS = THREE.RepeatWrapping;
-boxArtTextureFront.wrapT = THREE.RepeatWrapping;
-boxArtTextureFront.repeat.set(0.47, 1);
-boxArtTextureFront.offset.set(0.53, 1);
+  // Create the textures using the canvas
+  const boxArtTextureFront = new THREE.CanvasTexture(canvas);
+  const boxArtTextureLeft = new THREE.CanvasTexture(canvas);
+  const boxArtTextureBack = new THREE.CanvasTexture(canvas);
 
-boxArtTextureLeft.wrapS = THREE.RepeatWrapping;
-boxArtTextureLeft.wrapT = THREE.RepeatWrapping;
-boxArtTextureLeft.repeat.set(0.055, 1);
-boxArtTextureLeft.offset.set(0.475, 1);
+  boxArtTextureFront.wrapS = THREE.RepeatWrapping;
+  boxArtTextureFront.wrapT = THREE.RepeatWrapping;
+  boxArtTextureFront.repeat.set(0.47, 1);
+  boxArtTextureFront.offset.set(0.53, 1);
 
-boxArtTextureBack.wrapS = THREE.RepeatWrapping;
-boxArtTextureBack.wrapT = THREE.RepeatWrapping;
-boxArtTextureBack.repeat.set(0.47, 1);
+  boxArtTextureLeft.wrapS = THREE.RepeatWrapping;
+  boxArtTextureLeft.wrapT = THREE.RepeatWrapping;
+  boxArtTextureLeft.repeat.set(0.055, 1);
+  boxArtTextureLeft.offset.set(0.475, 1);
 
-// Create the DVD box geometry with the loaded textures
-const geometry = new THREE.BoxGeometry(2, 3, 0.25);
-const materials = [
-  new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
-  new THREE.MeshBasicMaterial({ map: boxArtTextureLeft }),
-  new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
-  new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
-  new THREE.MeshBasicMaterial({ map: boxArtTextureFront }),
-  new THREE.MeshBasicMaterial({ map: boxArtTextureBack })
-];
-const dvdBox = new THREE.Mesh(geometry, materials);
+  boxArtTextureBack.wrapS = THREE.RepeatWrapping;
+  boxArtTextureBack.wrapT = THREE.RepeatWrapping;
+  boxArtTextureBack.repeat.set(0.47, 1);
 
-// Add the DVD box to the scene and position the camera
-scene.add(dvdBox);
-camera.position.z = 3;
+  // Create the DVD box geometry with the loaded textures
+  const geometry = new THREE.BoxGeometry(2, 3, 0.25);
+  const materials = [
+    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
+    new THREE.MeshBasicMaterial({ map: boxArtTextureLeft }),
+    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
+    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
+    new THREE.MeshBasicMaterial({ map: boxArtTextureFront }),
+    new THREE.MeshBasicMaterial({ map: boxArtTextureBack })
+  ];
+  const dvdBox = new THREE.Mesh(geometry, materials);
 
-// Enable mouse controls for the camera
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.autoRotate = true;
-controls.autoRotateSpeed = 2;
+  // Add the DVD box to the scene and position the camera
+  scene.add(dvdBox);
+  camera.position.z = 3;
 
-// Animate the scene and handle mouse movement
-function animate() {
-  requestAnimationFrame(animate);
+  // Enable mouse controls for the camera
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 2;
 
-  // Update the camera controls
-  controls.update();
+  // Animate the scene and handle mouse movement
+  function animate() {
+    requestAnimationFrame(animate);
 
-  // Render the scene
-  renderer.render(scene, camera);
-}
-animate();
+    // Update the camera controls
+    controls.update();
+
+    // Render the scene
+    renderer.render(scene, camera);
+  }
+  animate();
+};
