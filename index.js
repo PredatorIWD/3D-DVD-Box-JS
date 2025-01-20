@@ -3,11 +3,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 document.body.style.backgroundImage = "url('assets/image.jpg')";
 
-// Set up the scene, camera, and renderer
+// Scene setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ alpha: true });
 
+// Renderer centering
 function centerRenderer() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -18,7 +19,7 @@ window.addEventListener('resize', centerRenderer);
 
 document.body.appendChild(renderer.domElement);
 
-// Create a canvas element and draw the image onto it
+// Image loading and processing
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 const image = new Image();
@@ -28,54 +29,64 @@ image.onload = function () {
   canvas.height = image.height;
   context.drawImage(image, 0, 0);
 
-  // Create the textures using the canvas
-  const boxArtTextureFront = new THREE.CanvasTexture(canvas);
-  const boxArtTextureLeft = new THREE.CanvasTexture(canvas);
-  const boxArtTextureBack = new THREE.CanvasTexture(canvas);
+  // Dynamic dimensions calculation
+  const BOX_HEIGHT = 3;
+  const SPINE_DEPTH = 0.25;
+  const imageAspect = image.width / image.height;
 
-  boxArtTextureFront.wrapS = THREE.RepeatWrapping;
-  boxArtTextureFront.wrapT = THREE.RepeatWrapping;
-  boxArtTextureFront.repeat.set(0.47, 1);
-  boxArtTextureFront.offset.set(0.53, 1);
+  // Calculate front/back panel width based on image proportions
+  const frontBackWidth = (3 * imageAspect - SPINE_DEPTH) / 2;
+  const totalUnwrappedWidth = 2 * frontBackWidth + SPINE_DEPTH;
 
-  boxArtTextureLeft.wrapS = THREE.RepeatWrapping;
-  boxArtTextureLeft.wrapT = THREE.RepeatWrapping;
-  boxArtTextureLeft.repeat.set(0.055, 1);
-  boxArtTextureLeft.offset.set(0.475, 1);
+  // Texture parameters calculation
+  const frontRepeatX = frontBackWidth / totalUnwrappedWidth;
+  const spineRepeatX = SPINE_DEPTH / totalUnwrappedWidth;
+  const frontOffsetX = (frontBackWidth + SPINE_DEPTH) / totalUnwrappedWidth;
 
-  boxArtTextureBack.wrapS = THREE.RepeatWrapping;
-  boxArtTextureBack.wrapT = THREE.RepeatWrapping;
-  boxArtTextureBack.repeat.set(0.47, 1);
+  // Texture creation helper
+  const createTexture = () => {
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    return texture;
+  };
 
-  // Create the DVD box geometry with the loaded textures
-  const geometry = new THREE.BoxGeometry(2, 3, 0.25);
+  // Create textures with calculated parameters
+  const frontTexture = createTexture();
+  frontTexture.repeat.set(frontRepeatX, 1);
+  frontTexture.offset.set(frontOffsetX, 1);
+
+  const spineTexture = createTexture();
+  spineTexture.repeat.set(spineRepeatX, 1);
+  spineTexture.offset.set(frontRepeatX, 1);
+
+  const backTexture = createTexture();
+  backTexture.repeat.set(frontRepeatX, 1);
+
+  // Create DVD box geometry with dynamic width
+  const geometry = new THREE.BoxGeometry(frontBackWidth, BOX_HEIGHT, SPINE_DEPTH);
   const materials = [
-    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
-    new THREE.MeshBasicMaterial({ map: boxArtTextureLeft }),
-    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
-    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),
-    new THREE.MeshBasicMaterial({ map: boxArtTextureFront }),
-    new THREE.MeshBasicMaterial({ map: boxArtTextureBack })
+    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),    // Left side
+    new THREE.MeshBasicMaterial({ map: spineTexture }),   // Right side (spine)
+    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),    // Top
+    new THREE.MeshBasicMaterial({ color: '#0d0d0d' }),    // Bottom
+    new THREE.MeshBasicMaterial({ map: frontTexture }),   // Front
+    new THREE.MeshBasicMaterial({ map: backTexture })     // Back
   ];
+
   const dvdBox = new THREE.Mesh(geometry, materials);
-
-  // Add the DVD box to the scene and position the camera
   scene.add(dvdBox);
-  camera.position.z = 3;
+  camera.position.z = 4;
 
-  // Enable mouse controls for the camera
+  // Controls setup
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.autoRotate = true;
-  controls.autoRotateSpeed = 2;
+  controls.autoRotateSpeed = 2.5;
 
-  // Animate the scene and handle mouse movement
+  // Animation loop
   function animate() {
     requestAnimationFrame(animate);
-
-    // Update the camera controls
     controls.update();
-
-    // Render the scene
     renderer.render(scene, camera);
   }
   animate();
